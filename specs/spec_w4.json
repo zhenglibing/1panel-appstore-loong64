@@ -1,0 +1,163 @@
+[
+ {
+  "key": "adminer",
+  "route": "artifact",
+  "tag": "6.3.0",
+  "fetch": [
+   {
+    "url": "https://github.com/vrana/adminer/releases/download/v6.3.0/adminer-6.3.0.php",
+    "name": "adminer.php",
+    "size": 0
+   }
+  ],
+  "copy": [
+   {
+    "src": "adminer.php",
+    "dst": "site/index.php"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/php:8.2-apache-sid\nCOPY site /var/www/html/\nENV TZ=Asia/Shanghai\nEXPOSE 80\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 5
+  }
+ },
+ {
+  "key": "dvwa",
+  "route": "static",
+  "repo": "https://github.com/digininja/DVWA",
+  "tag": "latest",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-mysql && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/login.php",
+   "wait": 6
+  }
+ },
+ {
+  "key": "roundcube",
+  "route": "artifact",
+  "tag": "1.7.5",
+  "fetch": [
+   {
+    "url": "https://github.com/roundcube/roundcubemail/releases/download/1.7.5/roundcubemail-1.7.5-complete.tar.gz",
+    "name": "rc.tar.gz",
+    "size": 0
+   }
+  ],
+  "copy": [
+   {
+    "src": "rc.tar.gz",
+    "extract": true,
+    "dst": "rc"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/php:8.2-apache-sid\nCOPY rc /var/www/html/\nRUN cd /usr/src/php/ext && docker-php-ext-install pdo_mysql intl 2>/dev/null || docker-php-ext-install pdo_mysql\nRUN chown -R www-data:www-data /var/www/html/temp /var/www/html/logs 2>/dev/null || true\nEXPOSE 80\nCMD [\"apache2-foreground\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "kodbox",
+  "route": "static",
+  "repo": "https://github.com/kalcaddle/kodbox",
+  "tag": "1.70.03",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-mysql php8.4-curl php8.4-zip && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "wallos",
+  "route": "static",
+  "repo": "https://github.com/ellite/Wallos",
+  "tag": "v5.10.4",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-sqlite3 php8.4-curl php8.4-zip && rm -rf /var/lib/apt/lists/*\nRUN apt-get install -y --no-install-recommends cron >/dev/null 2>&1 || true\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "nextcloud",
+  "route": "artifact",
+  "tag": "35.0.2",
+  "fetch": [
+   {
+    "url": "https://download.nextcloud.com/server/releases/nextcloud-35.0.2.zip",
+    "name": "nc.zip",
+    "size": 0
+   }
+  ],
+  "copy": [
+   {
+    "src": "nc.zip",
+    "dst": "nc.zip"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php php8.4-gd php8.4-mysql php8.4-sqlite3 php8.4-curl php8.4-xml php8.4-zip php8.4-intl php8.4-mbstring unzip ca-certificates && rm -rf /var/lib/apt/lists/*\nCOPY autoconfig.php /var/www/html/config/autoconfig.php\nCOPY nc.zip /opt/nc.zip\nRUN unzip -q /opt/nc.zip -d /var/www/html/ && rm /opt/nc.zip && chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "files": {
+   "autoconfig.php": "<?php\n$AUTOCONFIG = array(\n  \"dbtype\" => \"sqlite\",\n  \"directory\" => \"/var/www/html/data\",\n);\n"
+  },
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "device_extract": true
+ },
+ {
+  "key": "showdoc",
+  "route": "static",
+  "repo": "https://github.com/star7th/showdoc",
+  "tag": "v3.9.6",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-sqlite3 php8.4-gd && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "easyimage2",
+  "route": "static",
+  "repo": "https://github.com/icret/EasyImages2.0",
+  "tag": "v2.8.7",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "discuz",
+  "route": "static",
+  "repo": "https://gitee.com/Discuz/DiscuzX.git",
+  "tag": "v3.4",
+  "dist_dir": "upload",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-mysql && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/install/",
+   "wait": 6
+  }
+ }
+]

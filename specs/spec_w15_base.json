@@ -1,0 +1,239 @@
+[
+ {
+  "key": "gitea",
+  "route": "go_fe",
+  "repo": "https://github.com/go-gitea/gitea",
+  "tag": "v1.25.4",
+  "fe_dir": ".",
+  "fe_cmds": [
+   "corepack pnpm@10.0.0 install --frozen-lockfile || corepack pnpm@10.0.0 install",
+   "BROWSERSLIST_IGNORE_OLD_DATA=true corepack pnpm@10.0.0 exec webpack --disable-interpret"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "gitea"
+   }
+  ],
+  "ports": "3000",
+  "dockerfile": "# loong64 self-built (wave3) - gitea CE substitute for commitgo/gitea-ee\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata git su-exec 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata git su-exec)\nWORKDIR /app\nCOPY gitea /app/gitea\nCOPY public/assets /app/public/assets\nCOPY entrypoint.sh /app/entrypoint.sh\nRUN chmod +x /app/gitea /app/entrypoint.sh && addgroup -g 1000 git && adduser -D -u 1000 -G git git && mkdir -p /app/data /app/custom /data && chown -R git:git /app /data\nENV TZ=Asia/Shanghai GITEA_WORK_DIR=/app USER_UID=1000 USER_GID=1000\nEXPOSE 3000\nENTRYPOINT [\"/app/entrypoint.sh\"]\n",
+  "copy": [
+   {
+    "src": "public/assets",
+    "dst": "public/assets"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 20
+  },
+  "files": {
+   "entrypoint.sh": "#!/bin/sh\nif [ \"$(id -u)\" = \"0\" ]; then\n  for d in /app/data /app/custom /data; do [ -d \"$d\" ] && chown -R \"${USER_UID:-1000}:${USER_GID:-1000}\" \"$d\"; done\n  exec su-exec \"${USER_UID:-1000}:${USER_GID:-1000}\" /app/gitea\nfi\nexec /app/gitea\n"
+  }
+ },
+ {
+  "key": "zabbix-agent",
+  "route": "artifact",
+  "tag": "alpine-7.4.5",
+  "fetch": [],
+  "files": {
+   "entry.sh": "#!/bin/bash\nset -e\ncat > /etc/zabbix/zabbix_agentd.conf <<EOF\nServer=${ZBX_SERVER_HOST:-127.0.0.1}\nServerActive=${ZBX_SERVER_ACTIVE:-127.0.0.1}\nHostname=${ZBX_HOSTNAME:-$(hostname)}\nLogFile=/tmp/zabbix_agentd.log\nPidFile=/tmp/zabbix_agentd.pid\n${ZBX_PASSIVE_ALLOW:+AllowRoot=1}\nEOF\nexec zabbix_agentd -f -c /etc/zabbix/zabbix_agentd.conf\n"
+  },
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends zabbix-agent && rm -rf /var/lib/apt/lists/*\nCOPY entry.sh /entry.sh\nRUN chmod +x /entry.sh\nEXPOSE 10050\nENTRYPOINT [\"/entry.sh\"]\n",
+  "smoke": {
+   "type": "process",
+   "wait": 6
+  }
+ },
+ {
+  "key": "adguardhome",
+  "route": "go_fe",
+  "repo": "https://github.com/AdguardTeam/AdGuardHome",
+  "tag": "v0.107.79",
+  "fe_dir": "client",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build-prod"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "AdGuardHome"
+   }
+  ],
+  "ports": "3000",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 12
+  }
+ },
+ {
+  "key": "beszel",
+  "route": "go_only",
+  "repo": "https://github.com/henrygd/beszel",
+  "tag": "v0.19.0",
+  "prepare": [
+   "cd internal/site && bun install && bun run build"
+  ],
+  "bins": [
+   {
+    "pkg": "./internal/cmd/hub",
+    "out": "beszel"
+   }
+  ],
+  "ports": "8090",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "df_cmd": "[\"serve\", \"--http=0.0.0.0:8090\"]"
+ },
+ {
+  "key": "memos",
+  "route": "go_only",
+  "repo": "https://github.com/usememos/memos",
+  "tag": "v0.30.0",
+  "bins": [
+   {
+    "pkg": "./cmd/memos",
+    "out": "memos"
+   }
+  ],
+  "ports": "5230",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  }
+ },
+ {
+  "key": "navidrome",
+  "route": "go_fe",
+  "repo": "https://github.com/navidrome/navidrome",
+  "tag": "v0.64.0",
+  "fe_dir": "ui",
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "navidrome"
+   }
+  ],
+  "ports": "4533",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "fe_cmds": [
+   "npm ci --ignore-scripts --no-audit --no-fund || npm install --ignore-scripts --no-audit --no-fund",
+   "npx workbox copyLibraries build/3rdparty/ || true",
+   "npm run build"
+  ]
+ },
+ {
+  "key": "opengist",
+  "route": "go_fe",
+  "repo": "https://github.com/thomiceli/opengist",
+  "tag": "v1.15.2",
+  "fe_dir": ".",
+  "fe_cmds": [
+   "npm install --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npx vite -c public/vite.config.js build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "opengist",
+    "tags": "fs_embed"
+   }
+  ],
+  "ports": "6157",
+  "df_extra": "RUN apk add --no-cache git",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  }
+ },
+ {
+  "key": "prometheus",
+  "route": "go_fe",
+  "repo": "https://github.com/prometheus/prometheus",
+  "tag": "v3.14.0",
+  "fe_dir": "web/ui",
+  "fe_cmds": [
+   "pnpm install --frozen-lockfile || pnpm install",
+   "pnpm run build"
+  ],
+  "bins": [
+   {
+    "pkg": "./cmd/prometheus",
+    "out": "prometheus"
+   }
+  ],
+  "ports": "9090",
+  "smoke": {
+   "type": "http",
+   "path": "/status",
+   "wait": 12
+  },
+  "files": {
+   "prometheus.yml": "global:\n  scrape_interval: 15s\n"
+  },
+  "dockerfile": "# loong64 self-built (wave3)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app\nCOPY prometheus /app/prometheus\nCOPY prometheus.yml /etc/prometheus/prometheus.yml\nRUN chmod +x /app/prometheus && mkdir -p /prometheus\nENV TZ=Asia/Shanghai\nEXPOSE 9090\nENTRYPOINT [\"/app/prometheus\"]\nCMD [\"--config.file=/etc/prometheus/prometheus.yml\", \"--storage.tsdb.path=/prometheus\"]\n",
+  "copy": []
+ },
+ {
+  "key": "screego",
+  "route": "go_only",
+  "repo": "https://github.com/screego/server",
+  "tag": "v1.12.5",
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "screego"
+   }
+  ],
+  "ports": "5050",
+  "df_extra": "ENV SCREEGO_EXTERNAL_IP=127.0.0.1 SCREEGO_TURN_ADDRESS=0.0.0.0:3478 SCREEGO_SERVER_ADDRESS=0.0.0.0:5050",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "df_cmd": "[\"serve\"]"
+ },
+ {
+  "key": "ezbookkeeping",
+  "route": "go_fe",
+  "repo": "https://github.com/mayswind/ezbookkeeping",
+  "tag": "v2.0.0",
+  "fe_dir": ".",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "ezbookkeeping"
+   }
+  ],
+  "copy": [
+   {
+    "src": "conf",
+    "dst": "conf"
+   }
+  ],
+  "dockerfile": "# loong64 self-built (wave4)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /ezbookkeeping\nCOPY ezbookkeeping /ezbookkeeping/ezbookkeeping\nCOPY conf /ezbookkeeping/conf\nRUN chmod +x /ezbookkeeping/ezbookkeeping\nENV TZ=Asia/Shanghai\nEXPOSE 8080\nCMD [\"server\", \"run\"]\nENTRYPOINT [\"/ezbookkeeping/ezbookkeeping\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "df_cmd": "[\"server\", \"run\"]"
+ }
+]

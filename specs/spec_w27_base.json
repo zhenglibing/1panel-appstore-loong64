@@ -1,0 +1,161 @@
+[
+ {
+  "key": "casdoor",
+  "route": "go_fe",
+  "repo": "https://github.com/casbin/casdoor",
+  "tag": "v4.25.0",
+  "fe_dir": "web",
+  "prepare": [
+   "python -c \"import json;p=json.load(open('web/package.json'));p.get('scripts',{}).pop('preinstall',None);json.dump(p,open('web/package.json','w'))\"",
+   "cat > entrypoint.sh <<'EPOTE'\n#!/bin/sh\nif [ -f /conf/app.conf ]; then\n  CONF=/conf/app.conf; ARGS=-config=/conf/app.conf\nelse\n  CONF=/app/conf/app.conf; ARGS=\nfi\nif [ -f \"$CONF\" ]; then\n  [ -n \"$driverName\" ] && sed -i \"s|^driverName *=.*|driverName = $driverName|\" \"$CONF\"\n  [ -n \"$dataSourceName\" ] && sed -i \"s|^dataSourceName *=.*|dataSourceName = $dataSourceName|\" \"$CONF\"\n  [ -n \"$dbName\" ] && sed -i \"s|^dbName *=.*|dbName = $dbName|\" \"$CONF\"\nfi\ncd /app && exec /app/casdoor $ARGS\nEPOTE",
+   "GOPROXY=https://goproxy.cn,direct \"E:/05AIProjects/30zcode/08crosscompile/02loongson2k3000/1panel_port/toolchain/go/bin/go.exe\" get modernc.org/sqlite@v1.34.5 && GOPROXY=https://goproxy.cn,direct \"E:/05AIProjects/30zcode/08crosscompile/02loongson2k3000/1panel_port/toolchain/go/bin/go.exe\" mod tidy"
+  ],
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "casdoor"
+   }
+  ],
+  "copy": [
+   {
+    "src": "conf",
+    "dst": "conf"
+   },
+   {
+    "src": "web/build",
+    "dst": "web/build"
+   },
+   {
+    "src": "entrypoint.sh",
+    "dst": "entrypoint.sh"
+   }
+  ],
+  "ports": "8000",
+  "dockerfile": "# loong64 self-built (wave7) - store-compatible entrypoint (env -> conf/app.conf)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app\nCOPY casdoor /app/casdoor\nCOPY conf /app/conf\nCOPY web/build /app/web/build\nCOPY entrypoint.sh /app/entrypoint.sh\nRUN chmod +x /app/casdoor /app/entrypoint.sh\nENV TZ=Asia/Shanghai\nEXPOSE 8000\nENTRYPOINT [\"/bin/sh\", \"/app/entrypoint.sh\"]",
+  "smoke": {
+   "type": "http",
+   "path": "/api/health",
+   "wait": 12,
+   "env": {
+    "driverName": "sqlite",
+    "dataSourceName": "file:/tmp/casdoor.sqlite"
+   }
+  }
+ },
+ {
+  "key": "keycloak",
+  "route": "artifact",
+  "tag": "26.8.1",
+  "fetch": [
+   {
+    "url": "https://github.com/keycloak/keycloak/releases/download/26.8.1/keycloak-26.8.1.zip",
+    "name": "keycloak-26.8.1.zip",
+    "size": 174193327
+   }
+  ],
+  "copy": [
+   {
+    "src": "keycloak-26.8.1.zip",
+    "extract": true,
+    "dst": "keycloak"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nRUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*\nCOPY keycloak /opt/keycloak\nRUN chmod -R +x /opt/keycloak/bin/*.sh\nWORKDIR /opt/keycloak\nEXPOSE 8080\nENTRYPOINT [\"/opt/keycloak/bin/kc.sh\"]\nCMD [\"start-dev\"]\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "8080"
+   ],
+   "path": "/",
+   "wait": 45
+  }
+ },
+ {
+  "key": "kodbox",
+  "route": "static",
+  "repo": "https://github.com/kalcaddle/kodbox",
+  "tag": "1.70.03",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-mysql php8.4-curl php8.4-zip && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "maddy-mail",
+  "route": "go_only",
+  "repo": "https://github.com/foxcpp/maddy",
+  "tag": "v0.9.6",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "maddy"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "prometheus",
+  "route": "go_fe",
+  "repo": "https://github.com/prometheus/prometheus",
+  "tag": "v3.15.1",
+  "fe_dir": "web/ui",
+  "fe_cmds": [
+   "pnpm install --frozen-lockfile || pnpm install",
+   "pnpm run build"
+  ],
+  "bins": [
+   {
+    "pkg": "./cmd/prometheus",
+    "out": "prometheus"
+   }
+  ],
+  "ports": "9090",
+  "smoke": {
+   "type": "http",
+   "path": "/status",
+   "wait": 12
+  },
+  "files": {
+   "prometheus.yml": "global:\n  scrape_interval: 15s\n"
+  },
+  "dockerfile": "# loong64 self-built (wave3)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app\nCOPY prometheus /app/prometheus\nCOPY prometheus.yml /etc/prometheus/prometheus.yml\nRUN chmod +x /app/prometheus && mkdir -p /prometheus\nENV TZ=Asia/Shanghai\nEXPOSE 9090\nENTRYPOINT [\"/app/prometheus\"]\nCMD [\"--config.file=/etc/prometheus/prometheus.yml\", \"--storage.tsdb.path=/prometheus\"]\n",
+  "copy": []
+ },
+ {
+  "key": "sub2api",
+  "route": "go_only",
+  "repo": "https://github.com/Wei-Shaw/sub2api",
+  "tag": "0.2.19",
+  "bins": [
+   {
+    "pkg": "./cmd/server",
+    "out": "./built-server",
+    "tags": "embed",
+    "cwd": "backend",
+    "ldflags": "-s -w"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  },
+  "prepare": []
+ }
+]

@@ -1,0 +1,23 @@
+[
+ {
+  "key": "dockge",
+  "route": "node",
+  "repo": "https://github.com/louislam/dockge",
+  "tag": "1.5.0",
+  "pc_build": [],
+  "entry": "tsx",
+  "df_extra": "RUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nRUN apt-get update && apt-get install -y --no-install-recommends build-essential python3 make g++ && rm -rf /var/lib/apt/lists/*\n",
+  "ports": [
+   "5001"
+  ],
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 18,
+   "volumes": [
+    "/var/run/docker.sock:/var/run/docker.sock:ro"
+   ]
+  },
+  "df_cmd": "[\"./backend/index.ts\"]"
+ }
+]

@@ -1,0 +1,42 @@
+[
+ {
+  "key": "bitwarden",
+  "route": "rust",
+  "repo": "https://github.com/dani-garcia/vaultwarden",
+  "tag": "1.37.5",
+  "dockerfile": "FROM lcr.loongnix.cn/library/rust:1.83.0 AS build\nENV CARGO_BUILD_JOBS=4 TZ=Asia/Shanghai\nRUN mkdir -p /usr/local/cargo && printf '[source.crates-io]\\nreplace-with = \"rsproxy\"\\n[source.rsproxy]\\nregistry = \"sparse+https://rsproxy.cn/index/\"\\n[net]\\ngit-fetch-with-cli = true\\n' > /usr/local/cargo/config.toml\nWORKDIR /app\nCOPY app /app\nRUN cargo build --release --features sqlite\nFROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nRUN apt-get update && apt-get install -y --no-install-recommends ca-certificates openssl && rm -rf /var/lib/apt/lists/*\nRUN useradd -m vw && mkdir -p /data && chown -R vw /data\nCOPY --from=build /app/target/release/vaultwarden /vw\nUSER vw\nENV VW_DATA_FOLDER=/data ROCKET_PORT=80 ROCKET_ENV=prod TZ=Asia/Shanghai\nVOLUME /data\nEXPOSE 80\nENTRYPOINT [\"/vw\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10,
+   "env": {
+    "I_REALLY_WANT_VOLATILE_STORAGE": "true"
+   }
+  }
+ },
+ {
+  "key": "rustdesk",
+  "route": "rust",
+  "repo": "https://github.com/rustdesk/rustdesk-server",
+  "tag": "1.1.16",
+  "dockerfile": "FROM lcr.loongnix.cn/library/rust:1.83.0 AS build\nENV CARGO_BUILD_JOBS=4\nRUN apt-get update 2>/dev/null; apt-get install -y --no-install-recommends protobuf-compiler 2>/dev/null || true\nRUN mkdir -p /usr/local/cargo && printf '[source.crates-io]\\nreplace-with = \"rsproxy\"\\n[source.rsproxy]\\nregistry = \"sparse+https://rsproxy.cn/index/\"\\n[net]\\ngit-fetch-with-cli = true\\n' > /usr/local/cargo/config.toml\nWORKDIR /app\nCOPY app /app\nRUN cargo build --release\nFROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nRUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*\nCOPY --from=build /app/target/release/hbbs /hbbs\nCOPY --from=build /app/target/release/hbbr /hbbr\nCOPY entry.sh /entry.sh\nRUN chmod +x /entry.sh /hbbs /hbbr\nENV TZ=Asia/Shanghai\nEXPOSE 21115 21116 21116/udp 21117 21118 21119\nENTRYPOINT [\"/entry.sh\"]\n",
+  "files": {
+   "entry.sh": "#!/bin/bash\n/hbbs -r ${RELAY_HOST:-127.0.0.1}:21117 ${KEY_OPTS} &\n/hbbr ${KEY_OPTS} &\nwait -n\n"
+  },
+  "smoke": {
+   "type": "process",
+   "wait": 8
+  }
+ },
+ {
+  "key": "easytier",
+  "route": "rust",
+  "repo": "https://github.com/EasyTier/EasyTier",
+  "tag": "v2.7.0",
+  "dockerfile": "FROM lcr.loongnix.cn/library/rust:1.83.0 AS build\nENV CARGO_BUILD_JOBS=4\nRUN apt-get update 2>/dev/null; apt-get install -y --no-install-recommends protobuf-compiler 2>/dev/null || true\nRUN mkdir -p /usr/local/cargo && printf '[source.crates-io]\\nreplace-with = \"rsproxy\"\\n[source.rsproxy]\\nregistry = \"sparse+https://rsproxy.cn/index/\"\\n[net]\\ngit-fetch-with-cli = true\\n' > /usr/local/cargo/config.toml\nWORKDIR /app\nCOPY app /app\nRUN cargo build --release --bin easytier-core --bin easytier-cli\nFROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nRUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*\nCOPY --from=build /app/target/release/easytier-core /easytier-core\nCOPY --from=build /app/target/release/easytier-cli /easytier-cli\nENV TZ=Asia/Shanghai\nEXPOSE 11010 11010/udp\nENTRYPOINT [\"/easytier-core\"]\n",
+  "smoke": {
+   "type": "process",
+   "wait": 8
+  }
+ }
+]

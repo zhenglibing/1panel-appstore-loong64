@@ -1,0 +1,129 @@
+[
+ {
+  "key": "dockge",
+  "route": "node",
+  "repo": "https://github.com/louislam/dockge",
+  "tag": "1.5.0",
+  "pc_build": [],
+  "entry": "tsx",
+  "df_extra": "RUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nRUN apt-get update && apt-get install -y --no-install-recommends build-essential python3 make g++ && rm -rf /var/lib/apt/lists/*\n",
+  "ports": [
+   "5001"
+  ],
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 18,
+   "volumes": [
+    "/var/run/docker.sock:/var/run/docker.sock:ro"
+   ]
+  },
+  "df_cmd": "[\"./backend/index.ts\"]"
+ },
+ {
+  "key": "wikijs",
+  "route": "artifact",
+  "tag": "3.1.0",
+  "fetch": [
+   {
+    "url": "https://github.com/requarks/wiki/releases/download/v2.5.306/wiki-js.tar.gz",
+    "name": "wiki.tar.gz",
+    "size": 0
+   }
+  ],
+  "copy": [
+   {
+    "src": "wiki.tar.gz",
+    "extract": true,
+    "dst": "site"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/node:v20.19.3-debian\nCOPY site /app\nRUN cp -n config.sample.yml config.yml 2>/dev/null || true\nWORKDIR /app\nENV TZ=Asia/Shanghai WIKI_JS_FILEPATH=/data/db.sqlite NODE_ENV=production\nVOLUME /data\nEXPOSE 3000\nCMD [\"node\",\"server\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 35,
+   "env": {
+    "DB_TYPE": "sqlite",
+    "DB_FILEPATH": "/data/db.sqlite"
+   }
+  }
+ },
+ {
+  "key": "verdaccio",
+  "route": "artifact",
+  "tag": "7.0.2",
+  "fetch": [],
+  "files": {
+   "config.yaml": "storage: /verdaccio/storage/data\nauth:\n  htpasswd:\n    file: /verdaccio/storage/htpasswd\n    max_users: -1\nuplinks:\n  npmjs:\n    url: https://registry.npmmirror.com\npackages:\n  '@*/*':\n    access: $all\n    publish: $authenticated\n    unpublish: $authenticated\n  '**':\n    access: $all\n    publish: $authenticated\n    unpublish: $authenticated\nmiddlewares:\n  audit:\n    enabled: true\nlog: { type: stdout, format: pretty, level: http }\nweb: { title: Verdaccio }\npublish: true\n"
+  },
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN apt-get update && apt-get install -y --no-install-recommends nodejs npm ca-certificates && rm -rf /var/lib/apt/lists/*\nRUN npm install -g verdaccio@7.0.2\nRUN mkdir -p /verdaccio/storage && chmod -R 777 /verdaccio\nCOPY config.yaml /verdaccio/config.yaml\nVOLUME /verdaccio/storage\nEXPOSE 4873\nENTRYPOINT [\"verdaccio\",\"--config\",\"/verdaccio/config.yaml\",\"--listen\",\"0.0.0.0:4873\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 15
+  }
+ },
+ {
+  "key": "mongo-express",
+  "route": "artifact",
+  "tag": "1.0.2-20",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/node:v20.19.3-debian\nENV npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN npm install -g mongo-express@1.0.2 --force || npm install -g mongo-express@latest --force\nEXPOSE 8081\nENTRYPOINT [\"mongo-express\"]\n",
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "redis-commander",
+  "route": "artifact",
+  "tag": "latest",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/node:v20.19.3-debian\nENV npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN npm install -g redis-commander\nEXPOSE 8081\nENTRYPOINT [\"redis-commander\",\"--redis-host\",\"127.0.0.1\",\"--http-user\",\"\",\"--http-password-hash\",\"bc\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 15
+  }
+ },
+ {
+  "key": "twikoo",
+  "route": "artifact",
+  "tag": "2.0.17",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/node:v20.19.3-debian\nENV npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN npm install -g twikoo@latest || npm install -g twikoo\nENV TWIKOO_DATA=/data\nVOLUME /data\nEXPOSE 8080\nENTRYPOINT [\"node\",\"/usr/local/lib/node_modules/twikoo/dist/twikoo.min.js\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 12
+  }
+ },
+ {
+  "key": "node-red",
+  "route": "artifact",
+  "tag": "5.0.9",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN apt-get update && apt-get install -y --no-install-recommends nodejs npm ca-certificates && rm -rf /var/lib/apt/lists/*\nRUN npm install -g node-red@5.0.9 || npm install -g node-red@latest\nVOLUME /data\nEXPOSE 1880\nENTRYPOINT [\"node-red\",\"--userDir\",\"/data\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 20
+  }
+ },
+ {
+  "key": "nocodb",
+  "route": "artifact",
+  "tag": "0.301.5",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/node:v20.19.3-debian\nENV npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN npm install -g nocodb@0.301.3\nVOLUME /usr/app/data\nEXPOSE 8080\nENTRYPOINT [\"nocodb\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 35
+  }
+ }
+]

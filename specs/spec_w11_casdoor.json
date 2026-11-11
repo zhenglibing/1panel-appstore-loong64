@@ -1,0 +1,36 @@
+[
+ {
+  "key": "casdoor",
+  "route": "go_fe",
+  "repo": "https://github.com/casbin/casdoor",
+  "tag": "v4.6.0",
+  "fe_dir": "web",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "casdoor"
+   }
+  ],
+  "copy": [
+   {
+    "src": "conf",
+    "dst": "conf"
+   },
+   {
+    "src": "web/build",
+    "dst": "web/build"
+   }
+  ],
+  "ports": "8000",
+  "dockerfile": "# loong64 self-built (wave4)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app\nCOPY casdoor /app/casdoor\nCOPY conf /app/conf\nCOPY web/build /app/web/build\nRUN chmod +x /app/casdoor\nENV TZ=Asia/Shanghai\nEXPOSE 8000\nENTRYPOINT [\"/app/casdoor\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 15
+  }
+ }
+]

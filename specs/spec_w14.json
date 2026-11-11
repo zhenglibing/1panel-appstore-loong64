@@ -1,0 +1,69 @@
+[
+ {
+  "key": "certimate",
+  "route": "go_fe",
+  "repo": "https://github.com/certimate-go/certimate",
+  "tag": "v0.4.36",
+  "fe_dir": "ui",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "certimate"
+   }
+  ],
+  "ports": "8090",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 8
+  }
+ },
+ {
+  "key": "bililive-go",
+  "route": "go_fe",
+  "repo": "https://github.com/bililive-go/bililive-go",
+  "tag": "v0.8.3",
+  "fe_dir": "src/webapp",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": "./src/cmd/bililive",
+    "out": "bililive-go",
+    "tags": "release"
+   }
+  ],
+  "ports": "8080",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "excalidraw",
+  "route": "static",
+  "repo": "https://github.com/excalidraw/excalidraw",
+  "tag": "",
+  "prepare": [
+   "npm install -g yarn --registry=https://registry.npmmirror.com 2>/dev/null || true"
+  ],
+  "build_cmds": [
+   "yarn config set npmRegistryServer https://registry.npmmirror.com || true",
+   "yarn install --network-timeout 600000",
+   "yarn build"
+  ],
+  "dist_dir": "excalidraw-app/build",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 4
+  }
+ }
+]

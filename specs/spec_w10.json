@@ -1,0 +1,12 @@
+[
+ {
+  "key": "forgejo-runner",
+  "route": "go_only",
+  "repo": "https://code.forgejo.org/forgejo/runner",
+  "tag": "v13.2.1",
+  "bins": [{"pkg": ".", "out": "forgejo-runner", "tags": "netgo osusergo"}],
+  "ports": "",
+  "df_cmd": "[\"daemon\"]",
+  "smoke": {"type": "cmd", "path": "--version", "wait": 6}
+ }
+]

@@ -1,0 +1,102 @@
+[
+ {
+  "key": "it-tools",
+  "route": "static",
+  "repo": "https://github.com/CorentinTh/it-tools",
+  "tag": "2024.10.22-7ca5933",
+  "dist_dir": "dist",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 4
+  },
+  "build_cmds": []
+ },
+ {
+  "key": "cyberchef",
+  "route": "artifact",
+  "tag": "v11.5.0",
+  "fetch": [
+   {
+    "url": "https://github.com/gchq/CyberChef/releases/download/v11.5.0/CyberChef_8cd426dd4f40f1423912d5fad91b578a86a65112.zip",
+    "name": "cyberchef.zip",
+    "size": 82899968
+   }
+  ],
+  "copy": [
+   {
+    "src": "cyberchef.zip",
+    "extract": true,
+    "dst": "site"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/busybox:latest\nCOPY site /srv\nEXPOSE 80\nCMD [\"httpd\",\"-f\",\"-p\",\"80\",\"-h\",\"/srv\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 4
+  }
+ },
+ {
+  "key": "wechatmarkdowneditor",
+  "route": "static",
+  "repo": "https://github.com/doocs/md",
+  "tag": "v2.1.0",
+  "dist_dir": "apps/web/dist",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 4
+  },
+  "build_cmds": []
+ },
+ {
+  "key": "excalidraw",
+  "route": "static",
+  "repo": "https://github.com/excalidraw/excalidraw",
+  "tag": "",
+  "prepare": [
+   "corepack enable yarn 2>/dev/null || npm install -g yarn --registry=https://registry.npmmirror.com"
+  ],
+  "build_cmds": [
+   "yarn config set npmRegistryServer https://registry.npmmirror.com || true",
+   "yarn install",
+   "yarn build:vite"
+  ],
+  "dist_dir": "dist",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 4
+  }
+ },
+ {
+  "key": "yesplaymusic",
+  "route": "static",
+  "repo": "https://github.com/qier222/YesPlayMusic",
+  "tag": "v0.4.9",
+  "dist_dir": "dist",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 4
+  },
+  "build_cmds": []
+ },
+ {
+  "key": "linux-command",
+  "route": "static",
+  "repo": "https://github.com/jaywcjlove/linux-command",
+  "tag": "1.22.0",
+  "build_cmds": [
+   "npm install --no-audit --no-fund",
+   "npm run build"
+  ],
+  "dist_dir": "dist",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 4
+  }
+ }
+]

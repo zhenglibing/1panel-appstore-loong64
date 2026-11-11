@@ -1,0 +1,154 @@
+[
+ {
+  "key": "memos",
+  "route": "go_only",
+  "repo": "https://github.com/usememos/memos",
+  "tag": "v0.30.0",
+  "bins": [
+   {
+    "pkg": "./cmd/memos",
+    "out": "memos"
+   }
+  ],
+  "ports": "5230",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  }
+ },
+ {
+  "key": "beszel",
+  "route": "go_only",
+  "repo": "https://github.com/henrygd/beszel",
+  "tag": "v0.19.0",
+  "prepare": [
+   "cd internal/site && bun install && bun run build"
+  ],
+  "bins": [
+   {
+    "pkg": "./internal/cmd/hub",
+    "out": "beszel"
+   }
+  ],
+  "ports": "8090",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "df_cmd": "[\"serve\", \"--http=0.0.0.0:8090\"]"
+ },
+ {
+  "key": "navidrome",
+  "route": "go_fe",
+  "repo": "https://github.com/navidrome/navidrome",
+  "tag": "v0.64.0",
+  "fe_dir": "ui",
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "navidrome"
+   }
+  ],
+  "ports": "4533",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "fe_cmds": [
+   "npm ci --ignore-scripts --no-audit --no-fund || npm install --ignore-scripts --no-audit --no-fund",
+   "npx workbox copyLibraries build/3rdparty/ || true",
+   "npm run build"
+  ]
+ },
+ {
+  "key": "gatus",
+  "route": "go_fe",
+  "repo": "https://github.com/TwiN/gatus",
+  "tag": "v5.38.0",
+  "fe_dir": "web/app",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "gatus"
+   }
+  ],
+  "ports": "8080",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "files": {
+   "config/config.yaml": "storage:\n  type: sqlite\n  path: /app/data/gatus.db\n"
+  },
+  "df_extra": "COPY config /app/config\nRUN mkdir -p /app/data"
+ },
+ {
+  "key": "prometheus",
+  "route": "go_fe",
+  "repo": "https://github.com/prometheus/prometheus",
+  "tag": "v3.14.0",
+  "fe_dir": "web/ui",
+  "fe_cmds": [
+   "pnpm install --frozen-lockfile || pnpm install",
+   "pnpm run build"
+  ],
+  "bins": [
+   {
+    "pkg": "./cmd/prometheus",
+    "out": "prometheus"
+   }
+  ],
+  "ports": "9090",
+  "smoke": {
+   "type": "http",
+   "path": "/status",
+   "wait": 12
+  },
+  "files": {
+   "prometheus.yml": "global:\n  scrape_interval: 15s\n"
+  },
+  "dockerfile": "# loong64 self-built (wave3)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app\nCOPY prometheus /app/prometheus\nCOPY prometheus.yml /etc/prometheus/prometheus.yml\nRUN chmod +x /app/prometheus && mkdir -p /prometheus\nENV TZ=Asia/Shanghai\nEXPOSE 9090\nENTRYPOINT [\"/app/prometheus\"]\nCMD [\"--config.file=/etc/prometheus/prometheus.yml\", \"--storage.tsdb.path=/prometheus\"]\n",
+  "copy": []
+ },
+ {
+  "key": "gitea",
+  "route": "go_fe",
+  "repo": "https://github.com/go-gitea/gitea",
+  "tag": "v1.25.4",
+  "fe_dir": ".",
+  "fe_cmds": [
+   "corepack pnpm@10.0.0 install --frozen-lockfile || corepack pnpm@10.0.0 install",
+   "BROWSERSLIST_IGNORE_OLD_DATA=true corepack pnpm@10.0.0 exec webpack --disable-interpret"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "gitea"
+   }
+  ],
+  "ports": "3000",
+  "dockerfile": "# loong64 self-built (wave3) - gitea CE substitute for commitgo/gitea-ee\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata git su-exec 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata git su-exec)\nWORKDIR /app\nCOPY gitea /app/gitea\nCOPY public/assets /app/public/assets\nCOPY entrypoint.sh /app/entrypoint.sh\nRUN chmod +x /app/gitea /app/entrypoint.sh && addgroup -g 1000 git && adduser -D -u 1000 -G git git && mkdir -p /app/data /app/custom /data && chown -R git:git /app /data\nENV TZ=Asia/Shanghai GITEA_WORK_DIR=/app USER_UID=1000 USER_GID=1000\nEXPOSE 3000\nENTRYPOINT [\"/app/entrypoint.sh\"]\n",
+  "copy": [
+   {
+    "src": "public/assets",
+    "dst": "public/assets"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 20
+  },
+  "files": {
+   "entrypoint.sh": "#!/bin/sh\nif [ \"$(id -u)\" = \"0\" ]; then\n  for d in /app/data /app/custom /data; do [ -d \"$d\" ] && chown -R \"${USER_UID:-1000}:${USER_GID:-1000}\" \"$d\"; done\n  exec su-exec \"${USER_UID:-1000}:${USER_GID:-1000}\" /app/gitea\nfi\nexec /app/gitea\n"
+  }
+ }
+]

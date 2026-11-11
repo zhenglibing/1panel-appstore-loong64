@@ -1,0 +1,39 @@
+[
+ {
+  "key": "qbittorrent",
+  "route": "artifact",
+  "tag": "5.3.0",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends qbittorrent-nox ca-certificates && rm -rf /var/lib/apt/lists/*\nRUN useradd -m qbuser && mkdir -p /config /downloads && chown -R qbuser /config /downloads\nUSER qbuser\nENV WEBUI_PORT=8080 TZ=Asia/Shanghai\nVOLUME /config /downloads\nEXPOSE 8080\nENTRYPOINT [\"sh\",\"-c\",\"exec qbittorrent-nox --webui-port=${WEBUI_PORT:-8080}\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 8
+  }
+ },
+ {
+  "key": "valkey",
+  "route": "artifact",
+  "tag": "9.0.7",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends valkey-server ca-certificates && rm -rf /var/lib/apt/lists/*\nRUN mkdir -p /data && chown -R valkey:valkey /data\nUSER valkey\nENV TZ=Asia/Shanghai\nVOLUME /data\nEXPOSE 6379\nENTRYPOINT [\"sh\",\"-c\",\"exec valkey-server --bind 0.0.0.0 --dir /data --save 60 1 --appendonly no\"]\n",
+  "smoke": {
+   "type": "process",
+   "wait": 6
+  }
+ },
+ {
+  "key": "zabbix-agent",
+  "route": "artifact",
+  "tag": "alpine-7.4.5",
+  "fetch": [],
+  "files": {
+   "entry.sh": "#!/bin/bash\nset -e\ncat > /etc/zabbix/zabbix_agentd.conf <<EOF\nServer=${ZBX_SERVER_HOST:-127.0.0.1}\nServerActive=${ZBX_SERVER_ACTIVE:-127.0.0.1}\nHostname=${ZBX_HOSTNAME:-$(hostname)}\nLogFile=/tmp/zabbix_agentd.log\nPidFile=/tmp/zabbix_agentd.pid\n${ZBX_PASSIVE_ALLOW:+AllowRoot=1}\nEOF\nexec zabbix_agentd -f -c /etc/zabbix/zabbix_agentd.conf\n"
+  },
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends zabbix-agent && rm -rf /var/lib/apt/lists/*\nCOPY entry.sh /entry.sh\nRUN chmod +x /entry.sh\nEXPOSE 10050\nENTRYPOINT [\"/entry.sh\"]\n",
+  "smoke": {
+   "type": "process",
+   "wait": 6
+  }
+ }
+]

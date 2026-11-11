@@ -1,0 +1,149 @@
+[
+ {
+  "key": "komari",
+  "route": "go_only",
+  "repo": "https://github.com/komari-monitor/komari",
+  "tag": "1.5.0",
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "komari"
+   }
+  ],
+  "ports": "25774",
+  "df_cmd": "[\"server\"]",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 12
+  }
+ },
+ {
+  "key": "screego",
+  "route": "go_only",
+  "repo": "https://github.com/screego/server",
+  "tag": "v1.12.5",
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "screego"
+   }
+  ],
+  "ports": "5050",
+  "df_extra": "ENV SCREEGO_EXTERNAL_IP=127.0.0.1 SCREEGO_TURN_ADDRESS=0.0.0.0:3478 SCREEGO_SERVER_ADDRESS=0.0.0.0:5050",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "df_cmd": "[\"serve\"]"
+ },
+ {
+  "key": "opengist",
+  "route": "go_fe",
+  "repo": "https://github.com/thomiceli/opengist",
+  "tag": "v1.15.2",
+  "fe_dir": ".",
+  "fe_cmds": [
+   "npm install --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npx vite -c public/vite.config.js build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "opengist",
+    "tags": "fs_embed"
+   }
+  ],
+  "ports": "6157",
+  "df_extra": "RUN apk add --no-cache git",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  }
+ },
+ {
+  "key": "ezbookkeeping",
+  "route": "go_fe",
+  "repo": "https://github.com/mayswind/ezbookkeeping",
+  "tag": "v2.0.0",
+  "fe_dir": ".",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "ezbookkeeping"
+   }
+  ],
+  "copy": [
+   {
+    "src": "conf",
+    "dst": "conf"
+   }
+  ],
+  "dockerfile": "# loong64 self-built (wave4)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /ezbookkeeping\nCOPY ezbookkeeping /ezbookkeeping/ezbookkeeping\nCOPY conf /ezbookkeeping/conf\nRUN chmod +x /ezbookkeeping/ezbookkeeping\nENV TZ=Asia/Shanghai\nEXPOSE 8080\nCMD [\"server\", \"run\"]\nENTRYPOINT [\"/ezbookkeeping/ezbookkeeping\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 10
+  },
+  "df_cmd": "[\"server\", \"run\"]"
+ },
+ {
+  "key": "adguardhome",
+  "route": "go_fe",
+  "repo": "https://github.com/AdguardTeam/AdGuardHome",
+  "tag": "v0.107.79",
+  "fe_dir": "client",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build-prod"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "AdGuardHome"
+   }
+  ],
+  "ports": "3000",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 12
+  }
+ },
+ {
+  "key": "casdoor",
+  "route": "go_fe",
+  "repo": "https://github.com/casbin/casdoor",
+  "tag": "v4.6.0",
+  "fe_dir": "web",
+  "fe_cmds": [
+   "yarn install --cache-folder .yarn-cache",
+   "yarn build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "casdoor"
+   }
+  ],
+  "copy": [
+   {
+    "src": "conf",
+    "dst": "conf"
+   }
+  ],
+  "ports": "8000",
+  "dockerfile": "# loong64 self-built (wave4)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app\nCOPY casdoor /app/casdoor\nCOPY conf /app/conf\nRUN chmod +x /app/casdoor\nENV TZ=Asia/Shanghai\nEXPOSE 8000\nENTRYPOINT [\"/app/casdoor\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 15
+  }
+ }
+]

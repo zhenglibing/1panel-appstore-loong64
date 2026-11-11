@@ -1,0 +1,52 @@
+[
+ {
+  "key": "certimate",
+  "route": "go_fe",
+  "repo": "https://github.com/certimate-go/certimate",
+  "tag": "v0.4.36",
+  "fe_dir": "ui",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund --legacy-peer-deps",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "certimate"
+   }
+  ],
+  "ports": "8090",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 8
+  },
+  "prepare": [
+   "python -c \"import json;p=json.load(open('ui/package.json'));p.pop('devEngines',None);p.pop('packageManager',None);p.get('engines',{}).pop('npm',None);json.dump(p,open('ui/package.json','w'))\""
+  ]
+ },
+ {
+  "key": "bililive-go",
+  "route": "go_fe",
+  "repo": "https://github.com/bililive-go/bililive-go",
+  "tag": "v0.8.3",
+  "fe_dir": "src/webapp",
+  "fe_cmds": [
+   "npm install --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps --registry=https://registry.npmmirror.com",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": "./src/cmd/bililive",
+    "out": "bililive-go",
+    "tags": "release"
+   }
+  ],
+  "ports": "8080",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ }
+]

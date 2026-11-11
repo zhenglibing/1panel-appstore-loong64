@@ -1,0 +1,49 @@
+[
+ {
+  "key": "casdoor",
+  "route": "go_fe",
+  "repo": "https://github.com/casbin/casdoor",
+  "tag": "v4.25.0",
+  "fe_dir": "web",
+  "prepare": [
+   "python -c \"import json;p=json.load(open('web/package.json'));p.get('scripts',{}).pop('preinstall',None);json.dump(p,open('web/package.json','w'))\"",
+   "cat > entrypoint.sh <<'EPOTE'\n#!/bin/sh\nif [ -f /conf/app.conf ]; then\n  CONF=/conf/app.conf; ARGS=-config=/conf/app.conf\nelse\n  CONF=/app/conf/app.conf; ARGS=\nfi\nif [ -f \"$CONF\" ]; then\n  [ -n \"$driverName\" ] && sed -i \"s|^driverName *=.*|driverName = $driverName|\" \"$CONF\"\n  [ -n \"$dataSourceName\" ] && sed -i \"s|^dataSourceName *=.*|dataSourceName = $dataSourceName|\" \"$CONF\"\n  [ -n \"$dbName\" ] && sed -i \"s|^dbName *=.*|dbName = $dbName|\" \"$CONF\"\nfi\ncd /app && exec /app/casdoor $ARGS\nEPOTE",
+   "GOPROXY=https://goproxy.cn,direct \"E:/05AIProjects/30zcode/08crosscompile/02loongson2k3000/1panel_port/toolchain/go/bin/go.exe\" get modernc.org/sqlite@v1.34.5 && GOPROXY=https://goproxy.cn,direct \"E:/05AIProjects/30zcode/08crosscompile/02loongson2k3000/1panel_port/toolchain/go/bin/go.exe\" mod tidy"
+  ],
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "casdoor"
+   }
+  ],
+  "copy": [
+   {
+    "src": "conf",
+    "dst": "conf"
+   },
+   {
+    "src": "web/build",
+    "dst": "web/build"
+   },
+   {
+    "src": "entrypoint.sh",
+    "dst": "entrypoint.sh"
+   }
+  ],
+  "ports": "8000",
+  "dockerfile": "# loong64 self-built (wave7) - store-compatible entrypoint (env -> conf/app.conf)\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app\nCOPY casdoor /app/casdoor\nCOPY conf /app/conf\nCOPY web/build /app/web/build\nCOPY entrypoint.sh /app/entrypoint.sh\nRUN chmod +x /app/casdoor /app/entrypoint.sh\nENV TZ=Asia/Shanghai\nEXPOSE 8000\nENTRYPOINT [\"/bin/sh\", \"/app/entrypoint.sh\"]",
+  "smoke": {
+   "type": "http",
+   "path": "/api/health",
+   "wait": 12,
+   "env": {
+    "driverName": "sqlite",
+    "dataSourceName": "file:/tmp/casdoor.sqlite"
+   }
+  }
+ }
+]

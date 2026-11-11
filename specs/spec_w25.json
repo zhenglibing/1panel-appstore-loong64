@@ -1,0 +1,33 @@
+[
+ {
+  "key": "glance",
+  "route": "go_only",
+  "repo": "https://github.com/glanceapp/glance",
+  "tag": "v0.8.8",
+  "bins": [{"pkg": "./", "out": "glance"}],
+  "dockerfile": "# loong64 self-built (wave25) - WD=/app/config 对齐商店包挂载约定（wave20 修复沿用）\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata)\nWORKDIR /app/config\nCOPY glance /app/glance\nRUN chmod +x /app/glance\nENV TZ=Asia/Shanghai\nEXPOSE 8080\nENTRYPOINT [\"/app/glance\"]\n",
+  "smoke": {"type": "cmd", "cmd": ["-v"], "wait": 3}
+ },
+ {
+  "key": "verdaccio",
+  "route": "artifact",
+  "tag": "7.1.0",
+  "fetch": [],
+  "files": {
+   "config.yaml": "storage: /verdaccio/storage/data\nauth:\n  htpasswd:\n    file: /verdaccio/storage/htpasswd\n    max_users: -1\nuplinks:\n  npmjs:\n    url: https://registry.npmmirror.com\npackages:\n  '@*/*':\n    access: $all\n    publish: $authenticated\n    unpublish: $authenticated\n  '**':\n    access: $all\n    publish: $authenticated\n    unpublish: $authenticated\nmiddlewares:\n  audit:\n    enabled: true\nlog: { type: stdout, format: pretty, level: http }\nweb: { title: Verdaccio }\npublish: true\n"
+  },
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN apt-get update && apt-get install -y --no-install-recommends nodejs npm ca-certificates && rm -rf /var/lib/apt/lists/*\nRUN npm install -g verdaccio@7.1.0\nRUN mkdir -p /verdaccio/storage && chmod -R 777 /verdaccio\nCOPY config.yaml /verdaccio/config.yaml\nVOLUME /verdaccio/storage\nEXPOSE 4873\nENTRYPOINT [\"verdaccio\",\"--config\",\"/verdaccio/config.yaml\",\"--listen\",\"0.0.0.0:4873\"]\n",
+  "smoke": {"type": "http", "path": "/", "wait": 15}
+ },
+ {
+  "key": "wallos",
+  "route": "static",
+  "repo": "https://github.com/ellite/Wallos",
+  "tag": "5.11.1",
+  "git_tag": "v5.11.1",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-sqlite3 php8.4-curl php8.4-zip && rm -rf /var/lib/apt/lists/*\nRUN apt-get install -y --no-install-recommends cron >/dev/null 2>&1 || true\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {"type": "http", "path": "/", "wait": 6}
+ }
+]

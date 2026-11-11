@@ -1,0 +1,233 @@
+[
+ {
+  "key": "keycloak",
+  "route": "artifact",
+  "tag": "26.8.1",
+  "fetch": [
+   {
+    "url": "https://github.com/keycloak/keycloak/releases/download/26.8.1/keycloak-26.8.1.zip",
+    "name": "keycloak-26.8.1.zip",
+    "size": 174193327
+   }
+  ],
+  "copy": [
+   {
+    "src": "keycloak-26.8.1.zip",
+    "extract": true,
+    "dst": "keycloak"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nRUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*\nCOPY keycloak /opt/keycloak\nRUN chmod -R +x /opt/keycloak/bin/*.sh\nWORKDIR /opt/keycloak\nEXPOSE 8080\nENTRYPOINT [\"/opt/keycloak/bin/kc.sh\"]\nCMD [\"start-dev\"]\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "8080"
+   ],
+   "path": "/",
+   "wait": 45
+  }
+ },
+ {
+  "key": "metabase",
+  "route": "artifact",
+  "tag": "v0.65.3",
+  "fetch": [
+   {
+    "url": "https://downloads.metabase.com/v0.65.3/metabase.jar",
+    "name": "metabase.jar",
+    "size": 713394023
+   }
+  ],
+  "copy": [
+   {
+    "src": "metabase.jar",
+    "dst": "metabase.jar"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nWORKDIR /app\nCOPY metabase.jar /app/metabase.jar\nENV MB_SITE_URL=\"\" TZ=Asia/Shanghai\nEXPOSE 3000\nENTRYPOINT [\"java\",\"-jar\",\"/app/metabase.jar\"]\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "3000"
+   ],
+   "path": "/",
+   "wait": 50
+  }
+ },
+ {
+  "key": "nacos",
+  "route": "artifact",
+  "tag": "v3.3.0",
+  "fetch": [
+   {
+    "url": "https://github.com/alibaba/nacos/releases/download/3.3.0/nacos-server-3.3.0.tar.gz",
+    "name": "nacos-server-3.3.0.tar.gz",
+    "size": 232783872
+   }
+  ],
+  "copy": [
+   {
+    "src": "nacos-server-3.3.0.tar.gz",
+    "extract": true,
+    "dst": "nacos"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nCOPY nacos /opt/nacos\nRUN chmod +x /opt/nacos/bin/*.sh\nENV MODE=standalone NACOS_SERVER_PORT=8848 JVM_XMS=256m JVM_XMX=512m TZ=Asia/Shanghai\nWORKDIR /opt/nacos\nEXPOSE 8848 9848\nCMD [\"sh\",\"-c\",\"bin/startup.sh -m standalone && tail -F logs/start.out\"]\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "8848"
+   ],
+   "path": "/nacos",
+   "wait": 35
+  }
+ },
+ {
+  "key": "rocketmq",
+  "route": "artifact",
+  "tag": "5.5.0",
+  "fetch": [
+   {
+    "url": "https://mirrors.huaweicloud.com/apache/rocketmq/5.5.0/rocketmq-all-5.5.0-bin-release.zip",
+    "name": "rocketmq-all-5.5.0-bin-release.zip",
+    "size": 101592573
+   }
+  ],
+  "copy": [
+   {
+    "src": "rocketmq-all-5.5.0-bin-release.zip",
+    "extract": true,
+    "dst": "rocketmq"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nRUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*\nCOPY rocketmq /opt/rocketmq\nENV JAVA_OPT_EXT=\"-Xms256m -Xmx512m -Xmn128m\" NAMESRV_ADDR=localhost:9876 TZ=Asia/Shanghai\nWORKDIR /opt/rocketmq/bin\nEXPOSE 9876 10909 10911\nCMD [\"sh\",\"mqnamesrv\"]\n",
+  "smoke": {
+   "type": "process",
+   "wait": 15
+  }
+ },
+ {
+  "key": "sentinel-dashboard",
+  "route": "artifact",
+  "tag": "1.8.10",
+  "fetch": [
+   {
+    "url": "https://github.com/alibaba/Sentinel/releases/download/1.8.10/sentinel-dashboard-1.8.10.jar",
+    "name": "sentinel-dashboard-1.8.10.jar",
+    "size": 21504000
+   }
+  ],
+  "copy": [
+   {
+    "src": "sentinel-dashboard-1.8.10.jar",
+    "dst": "sentinel-dashboard.jar"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:8u492-b09-jdk\nWORKDIR /app\nCOPY sentinel-dashboard.jar /app/\nENV TZ=Asia/Shanghai\nEXPOSE 8858\nENTRYPOINT [\"java\",\"-Dserver.port=8858\",\"-jar\",\"/app/sentinel-dashboard.jar\"]\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "8858"
+   ],
+   "path": "/",
+   "wait": 25
+  }
+ },
+ {
+  "key": "komga",
+  "route": "artifact",
+  "tag": "1.30.0",
+  "fetch": [
+   {
+    "url": "https://github.com/gotson/komga/releases/download/1.30.0/komga-1.30.0.jar",
+    "name": "komga-1.30.0.jar",
+    "size": 0
+   },
+   {
+    "url": "https://sqlite.org/2026/sqlite-amalgamation-3540100.zip",
+    "name": "sqlite-amal.zip",
+    "size": 2990966
+   },
+   {
+    "url": "https://repo1.maven.org/maven2/org/xerial/sqlite-jdbc/3.54.1.0/sqlite-jdbc-3.54.1.0.jar",
+    "name": "sqlite-jdbc.jar",
+    "size": 0
+   }
+  ],
+  "copy": [
+   {
+    "src": "komga-1.30.0.jar",
+    "dst": "komga.jar"
+   },
+   {
+    "src": "sqlite-amal.zip",
+    "extract": true,
+    "dst": "amal"
+   },
+   {
+    "src": "sqlite-jdbc.jar",
+    "dst": "sqlite-jdbc.jar"
+   },
+   {
+    "src": "NativeDB.java",
+    "dst": "NativeDB.java"
+   },
+   {
+    "src": "NativeDB.c",
+    "dst": "NativeDB.c"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk AS native\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nRUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && rm -rf /var/lib/apt/lists/*\nCOPY amal/sqlite3.c /tmp/\nCOPY amal/sqlite3.h /tmp/\nCOPY NativeDB.c /tmp/\nCOPY NativeDB.java /tmp/\nCOPY sqlite-jdbc.jar /tmp/\nWORKDIR /tmp\nRUN javac -cp sqlite-jdbc.jar -h /tmp/jni NativeDB.java && mv /tmp/jni/org_sqlite_core_NativeDB.h /tmp/NativeDB.h\nRUN gcc -shared -fPIC -O2 -D_GNU_SOURCE -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_RTREE -DSQLITE_ENABLE_COLUMN_METADATA -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -I/tmp/jni -o libsqlitejdbc.so NativeDB.c sqlite3.c -lpthread -ldl\n\nFROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nWORKDIR /app\nCOPY --from=native /tmp/libsqlitejdbc.so /usr/lib/libsqlitejdbc.so\nCOPY komga.jar /app/komga.jar\nENV TZ=Asia/Shanghai SERVER_PORT=8080 JAVA_TOOL_OPTIONS=-Djava.library.path=/usr/lib\nEXPOSE 8080\nENTRYPOINT [\"java\",\"-jar\",\"/app/komga.jar\"]\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "8080"
+   ],
+   "path": "/",
+   "wait": 40
+  },
+  "files": {}
+ },
+ {
+  "key": "kafka",
+  "route": "artifact",
+  "tag": "4.0.0",
+  "fetch": [
+   {
+    "url": "https://mirrors.huaweicloud.com/apache/kafka/4.0.0/kafka_2.13-4.0.0.tgz",
+    "name": "kafka_2.13-4.0.0.tgz",
+    "size": 132045169
+   }
+  ],
+  "copy": [
+   {
+    "src": "kafka_2.13-4.0.0.tgz",
+    "extract": true,
+    "dst": "kafka"
+   }
+  ],
+  "files": {
+   "entry.sh": "#!/bin/bash\nset -e\nmkdir -p /bitnami/kafka\nPROP=/opt/kafka/config/loong.properties\ncat > $PROP <<'EOF'\nprocess.roles=broker,controller\nnode.id=1\ncontroller.quorum.voters=1@localhost:9093\ncontroller.listener.names=CONTROLLER\nlistener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT\nnum.network.threads=3\nnum.io.threads=8\nsocket.send.buffer.bytes=102400\nsocket.receive.buffer.bytes=102400\nsocket.request.max.bytes=104857600\nnum.partitions=1\ndefault.replication.factor=1\noffsets.topic.replication.factor=1\ntransaction.state.log.replication.factor=1\ntransaction.state.log.min.isr=1\nlog.retention.hours=168\nlog.segment.bytes=1073741824\ngroup.initial.rebalance.delay.ms=0\nEOF\necho \"listeners=${KAFKA_CFG_LISTENERS:-PLAINTEXT://:9092,CONTROLLER://:9093}\" >> $PROP\necho \"advertised.listeners=${KAFKA_CFG_ADVERTISED_LISTENERS:-PLAINTEXT://localhost:9092}\" >> $PROP\necho \"log.dirs=/bitnami/kafka\" >> $PROP\nfor var in $(printenv | sed -n 's/^KAFKA_CFG_\\([^=]*\\)=.*/\\1/p'); do\n  prop=$(echo \"$var\" | tr 'A-Z_' 'a-z.')\n  val=$(printenv \"KAFKA_CFG_$var\")\n  case \"$prop\" in listeners|advertised.listeners|log.dirs) sed -i \"s|^$prop=.*|$prop=$val|\" $PROP ;; *) echo \"$prop=$val\" >> $PROP ;; esac\ndone\nif [ ! -f /bitnami/kafka/meta.properties ]; then\n  /opt/kafka/bin/kafka-storage.sh format --standalone -t \"$(/opt/kafka/bin/kafka-storage.sh random-uuid)\" -c \"$PROP\" --ignore-formatted\nfi\nexec /opt/kafka/bin/kafka-server-start.sh $PROP\n"
+  },
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nCOPY kafka /opt/kafka\nCOPY entry.sh /entry.sh\nRUN chmod +x /entry.sh /opt/kafka/bin/*.sh\nENV PATH=/opt/kafka/bin:$PATH JAVA_OPT_EXT=\"-Xms256m -Xmx512m -Xmn128m\" KAFKA_HOME=/opt/kafka TZ=Asia/Shanghai\nVOLUME /bitnami/kafka\nEXPOSE 9092 9093\nENTRYPOINT [\"/entry.sh\"]\n",
+  "smoke": {
+   "type": "process",
+   "wait": 25
+  }
+ },
+ {
+  "key": "tomcat",
+  "route": "artifact",
+  "tag": "10.1.43",
+  "fetch": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/tomcat:10-jdk21-temurin\nRUN mkdir -p /opt/bitnami /bitnami/tomcat && ln -sfn /usr/local/tomcat /opt/bitnami/tomcat\nENV TOMCAT_HOME=/usr/local/tomcat TZ=Asia/Shanghai\nEXPOSE 8080\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "8080"
+   ],
+   "path": "/",
+   "wait": 12
+  }
+ }
+]

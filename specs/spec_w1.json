@@ -1,0 +1,362 @@
+[
+ {
+  "key": "cloudflared",
+  "route": "go_only",
+  "repo": "https://github.com/cloudflare/cloudflared",
+  "tag": "2026.10.7",
+  "bins": [
+   {
+    "pkg": "./cmd/cloudflared",
+    "out": "cloudflared",
+    "ldflags": "-s -w"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "miniflux",
+  "route": "go_only",
+  "repo": "https://github.com/miniflux/v2",
+  "tag": "2.3.5",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "miniflux"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-version"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "node-exporter",
+  "route": "go_only",
+  "repo": "https://github.com/prometheus/node_exporter",
+  "tag": "v1.12.1",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "node_exporter"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "9100"
+   ],
+   "path": "/metrics",
+   "wait": 5
+  }
+ },
+ {
+  "key": "watchtower",
+  "route": "go_only",
+  "repo": "https://github.com/containrrr/watchtower",
+  "tag": "v1.7.1",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "watchtower"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--help"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "frpc",
+  "route": "go_only",
+  "repo": "https://github.com/fatedier/frp",
+  "tag": "v0.71.1",
+  "bins": [
+   {
+    "pkg": "./cmd/frpc",
+    "out": "frpc",
+    "tags": "frpc,noweb"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "frps",
+  "route": "go_only",
+  "repo": "https://github.com/fatedier/frp",
+  "tag": "v0.71.1",
+  "bins": [
+   {
+    "pkg": "./cmd/frps",
+    "out": "frps",
+    "tags": "frps,noweb"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "glance",
+  "route": "go_only",
+  "repo": "https://github.com/glanceapp/glance",
+  "tag": "v0.8.7",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "glance"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "maddy-mail",
+  "route": "go_only",
+  "repo": "https://github.com/foxcpp/maddy",
+  "tag": "v0.9.6",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "maddy"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "artalk",
+  "route": "go_only",
+  "repo": "https://github.com/artalkjs/Artalk",
+  "tag": "v2.10",
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "artalk"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "version"
+   ],
+   "wait": 3
+  },
+  "prepare": [
+   "npm install -g pnpm@10.33.2 --registry=https://registry.npmmirror.com || true",
+   "pnpm install --frozen-lockfile --registry=https://registry.npmmirror.com",
+   "pnpm build:all",
+   "pnpm build:auth"
+  ]
+ },
+ {
+  "key": "sftpgo",
+  "route": "go_only",
+  "repo": "https://github.com/drakkan/sftpgo",
+  "tag": "v2.7.6",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "sftpgo",
+    "tags": "sqlite"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "8080"
+   ],
+   "path": "/",
+   "wait": 6
+  },
+  "df_cmd": "[\"serve\"]",
+  "df_extra": "ENV SFTPGO_CONFIG_DIR=/srv/sftpgo SFTPGO_DATA_PROVIDER__DRIVER=bolt SFTPGO_DATA_PROVIDER__SOURCE=sftpgo.bolt\nCOPY sftpgo.json /srv/sftpgo/sftpgo.json\nCOPY templates /srv/sftpgo/templates\nRUN addgroup -S sftpgo && adduser -S -G sftpgo sftpgo && mkdir -p /srv/sftpgo/data /srv/sftpgo/keys /srv/sftpgo/backups && chown -R sftpgo:sftpgo /srv/sftpgo\nUSER sftpgo",
+  "files": {
+   "sftpgo.json": "{\n  \"data\": {\n    \"provider\": \"bolt\"\n  }\n}\n"
+  },
+  "copy": [
+   {
+    "src": "templates",
+    "dst": "templates"
+   }
+  ]
+ },
+ {
+  "key": "npc",
+  "route": "go_only",
+  "repo": "https://github.com/djylb/nps",
+  "tag": "v0.26.35",
+  "bins": [
+   {
+    "pkg": "./cmd/npc",
+    "out": "npc"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "nps",
+  "route": "go_only",
+  "repo": "https://github.com/djylb/nps",
+  "tag": "v0.26.35",
+  "bins": [
+   {
+    "pkg": "./cmd/nps",
+    "out": "nps"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "sub2api",
+  "route": "go_only",
+  "repo": "https://github.com/Wei-Shaw/sub2api",
+  "tag": "0.2.19",
+  "bins": [
+   {
+    "pkg": "./cmd/server",
+    "out": "./built-server",
+    "tags": "embed",
+    "cwd": "backend",
+    "ldflags": "-s -w"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  },
+  "prepare": []
+ },
+ {
+  "key": "palworld-server-tool",
+  "route": "go_only",
+  "repo": "https://github.com/zaigie/palworld-server-tool",
+  "tag": "0.12.2",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "palworld-server-tool"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "-v"
+   ],
+   "wait": 3
+  },
+  "prepare": []
+ },
+ {
+  "key": "act-runner",
+  "route": "go_only",
+  "repo": "https://gitea.com/gitea/runner.git",
+  "tag": "0.6.1",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "act_runner"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 3
+  }
+ },
+ {
+  "key": "new-api",
+  "route": "go_fe",
+  "repo": "https://github.com/QuantumNous/new-api",
+  "tag": "v0.13.2",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "new-api"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "3000"
+   ],
+   "path": "/",
+   "wait": 6
+  },
+  "fe_dir": "web",
+  "fe_cmds": []
+ },
+ {
+  "key": "alist",
+  "route": "go_only",
+  "repo": "https://github.com/alist-org/alist",
+  "tag": "v3.66.0",
+  "prepare": [
+   "mkdir -p public && cd public && curl -fsSL --retry 3 https://github.com/alist-org/alist-web/releases/latest/download/dist.tar.gz -o dist.tar.gz && tar -xzf dist.tar.gz && rm -f dist.tar.gz",
+   "printf 'package public\n\nimport \"embed\"\n\n//go:embed dist\nvar Public embed.FS\n' > public/public.go"
+  ],
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "alist"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "5244"
+   ],
+   "path": "/",
+   "wait": 8
+  },
+  "df_cmd": "[\"server\"]"
+ }
+]
