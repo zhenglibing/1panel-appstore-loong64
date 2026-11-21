@@ -4,7 +4,7 @@
 
 - 配套上游 PR：[1Panel-dev/appstore](https://github.com/1Panel-dev/appstore) loong64 build 配方（openresty + 7 应用）
 - 实测环境：零刻 ME Pro（龙芯 2K3000，8×LA364E），Loongnix 25，Docker 26.1.5
-- 实测成果：268 个商店应用四层盘点，**158 个自建仓库 / 293 个 tag**（已全量镜像至公共 ACR 源并逐 tag 校验 digest），体检 **131/131 离线可装**，OpenResty 建站闭环（静态站/反代/WAF）
+- 实测成果：268 个商店应用四层盘点，**161 个自建仓库 / 296 个 tag**（已全量镜像至公共 ACR 源并逐 tag 校验 digest），体检 **132/132 离线可装**，OpenResty 建站闭环（静态站/反代/WAF）
 
 ## 背景与思路
 
@@ -33,7 +33,7 @@ recipes/
 
 ## 公共镜像源（免构建直用，2026-11-21）
 
-全部自建镜像已同步到阿里云 ACR 公共实例并逐 tag 校验（**158 仓库 / 293 tag，digest 293/293 与源 registry 一致**）。任何龙芯设备（含其他人的 1Panel）都可以直接在线拉取，无需自行构建、也无需连任何人的局域网：
+全部自建镜像已同步到阿里云 ACR 公共实例并逐 tag 校验（**161 仓库 / 296 tag，digest 全量比对与源 registry 一致**）。任何龙芯设备（含其他人的 1Panel）都可以直接在线拉取，无需自行构建、也无需连任何人的局域网：
 
 ```bash
 # 拉取示例（命名空间公开后匿名可用）
@@ -78,8 +78,8 @@ python -I pipeline.py --spec specs/spec_w27.json --key prometheus
 
 ## 体检与维护
 
-- `audit14`（manifest 级探测）+ `audit20`（离线可装性）双体检：131/131 零 miss（2026-11-21，含 OpenResty 安全更新 -2-2）
-- 公共 ACR 源校验：逐 tag 比对本地 registry 与 ACR 的 manifest digest，293/293 bit-exact
+- `audit14`（manifest 级探测）+ `audit20`（离线可装性）双体检：132/132 零 miss（2026-11-21，wave67 增补 koodo-reader / cordys-crm / mkdocs-material）
+- 公共 ACR 源校验：逐 tag 比对本地 registry 与 ACR 的 manifest digest，296 tag 全量 bit-exact（含 wave67 三新 tag）
 - 上游漂移检测：CDN 索引 vs 本地快照严格 diff（键用 `apps[].id`），全绿则零动作
 - 备份惯例：registry 卷直接 tar 落盘，不要依赖"可重建"
 
