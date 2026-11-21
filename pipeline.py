@@ -19,7 +19,7 @@ SSH = os.path.join(ROOT, "ssh_exec.py")
 GO = os.path.join(ROOT, "1panel_port", "toolchain", "go", "bin", "go.exe")
 DL = os.path.join(HERE, "dl")
 STATUS = os.path.join(HERE, "status.json")
-REG = "127.0.0.1:5000/loong"
+REG = "127.0.0.1:5000/loong"  # build push target; public mirror = ACR namespace 1panel-loong64 (see README 公共镜像源)
 
 GOENV = {
     "CGO_ENABLED": "0", "GOOS": "linux", "GOARCH": "loong64",

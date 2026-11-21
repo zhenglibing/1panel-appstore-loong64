@@ -4,7 +4,7 @@
 
 - 配套上游 PR：[1Panel-dev/appstore](https://github.com/1Panel-dev/appstore) loong64 build 配方（openresty + 7 应用）
 - 实测环境：零刻 ME Pro（龙芯 2K3000，8×LA364E），Loongnix 25，Docker 26.1.5
-- 实测成果：268 个商店应用四层盘点，**86 个自建镜像 / 158 个 tag**，体检 **109/109 离线可装**，OpenResty 建站闭环（静态站/反代/WAF）
+- 实测成果：268 个商店应用四层盘点，**158 个自建仓库 / 293 个 tag**（已全量镜像至公共 ACR 源并逐 tag 校验 digest），体检 **131/131 离线可装**，OpenResty 建站闭环（静态站/反代/WAF）
 
 ## 背景与思路
 
@@ -18,7 +18,7 @@ Docker Hub 上游镜像无一提供 loong64 manifest，龙芯设备安装商店�
 | D 层 | 不可移植（.NET/GPU/闭源），映射层拦截并明示 | 1 |
 | VAR | compose 多镜像变体处理 | 14 |
 
-镜像分发用设备本地 registry（`127.0.0.1:5000`，localhost 免 TLS），商店 compose 全部改写为 `127.0.0.1:5000/loong/<key>:<ver>`。
+镜像分发双层：设备本地 registry（`127.0.0.1:5000`，localhost 免 TLS，构建产物的内网层）+ 阿里云 ACR 公共镜像源（`crpi-a02ej0ppuvq7b0mw.cn-hangzhou.personal.cr.aliyuncs.com/1panel-loong64/<key>:<ver>`，面向所有龙芯设备的公开层）；自建商店源 compose 改写为本地 ref，agent 二级回源在本地缺失时自动回落 ACR。
 
 ## 目录结构
 
@@ -31,16 +31,34 @@ recipes/
   apps/<key>-<ver>/    7 个代表性应用配方（BUILD.md + Dockerfile）
 ```
 
+## 公共镜像源（免构建直用，2026-11-21）
+
+全部自建镜像已同步到阿里云 ACR 公共实例并逐 tag 校验（**158 仓库 / 293 tag，digest 293/293 与源 registry 一致**）。任何龙芯设备（含其他人的 1Panel）都可以直接在线拉取，无需自行构建、也无需连任何人的局域网：
+
+```bash
+# 拉取示例（命名空间公开后匿名可用）
+docker pull crpi-a02ej0ppuvq7b0mw.cn-hangzhou.personal.cr.aliyuncs.com/1panel-loong64/openresty:1.31.8.1-2-2-noble
+docker pull crpi-a02ej0ppuvq7b0mw.cn-hangzhou.personal.cr.aliyuncs.com/1panel-loong64/gatus:v5.38.0
+```
+
+- 命名空间 `1panel-loong64` 与本地 registry `127.0.0.1:5000/loong/...` 一一对应：`loong/<key>:<tag>` ↔ `1panel-loong64/<key>:<tag>`
+- 配套的 1Panel agent（[1Panel fork loong64-support 分支](https://github.com/zhenglibing/1Panel/tree/loong64-support)）已内置**二级回源**：安装/升级渲染 compose 时探测本地 registry，`loong/<key>:<tag>` 不在本地即自动改写为上述 ACR 地址——新版本商店条目先于本地 registry 也能在线安装
+- 云端盘点用 `docker buildx imagetools inspect <ref>`（ACR 个人版不开放 `/v2/_catalog` API）；命名空间可见性在 ACR 控制台设置
+
 ## 快速开始（龙芯设备）
 
 ```bash
-# 1. 本地 registry（镜像分发）
+# 0. 直接使用公共镜像源（推荐起点，见上节）
+docker pull crpi-a02ej0ppuvq7b0mw.cn-hangzhou.personal.cr.aliyuncs.com/1panel-loong64/<key>:<ver>
+
+# 1. 自建时：本地 registry（构建产物的内网分发层）
 docker run -d --name loong-registry --restart always -p 127.0.0.1:5000:5000 \
   -v loong-registry-data:/var/lib/registry lcr.loongnix.cn/library/registry:3.1.1
 
 # 2. 纯 Go 应用：x86 PC 交叉编译 or 设备原生构建
 GOARCH=loong64 GOOS=linux go build -o maddy ./cmd/maddy   # PC 侧（CGO=0）
 # 然后按 recipes/apps/<key>-<ver>/Dockerfile 组装镜像并推 127.0.0.1:5000/loong/<key>:<ver>
+# （构建完成后同步到公共 ACR 源，供其他设备匿名拉取）
 
 # 3. 复杂应用（Go+前端 / Java release / PHP 站点）：用 pipeline.py + specs/ 配方
 python -I pipeline.py --spec specs/spec_w27.json --key prometheus
@@ -60,9 +78,10 @@ python -I pipeline.py --spec specs/spec_w27.json --key prometheus
 
 ## 体检与维护
 
-- `audit14`（manifest 级探测）+ `audit20`（离线可装性）双体检：79×200 + 28 命中 + 0 miss，109/109 offline-ok
+- `audit14`（manifest 级探测）+ `audit20`（离线可装性）双体检：131/131 零 miss（2026-11-21，含 OpenResty 安全更新 -2-2）
+- 公共 ACR 源校验：逐 tag 比对本地 registry 与 ACR 的 manifest digest，293/293 bit-exact
 - 上游漂移检测：CDN 索引 vs 本地快照严格 diff（键用 `apps[].id`），全绿则零动作
-- 备份惯例：registry 卷直接 tar 落盘（13G 约 17 分钟），不要依赖"可重建"
+- 备份惯例：registry 卷直接 tar 落盘，不要依赖"可重建"
 
 ## 许可与致谢
 
