@@ -1,0 +1,250 @@
+[
+ {
+  "key": "node-exporter",
+  "route": "go_only",
+  "repo": "https://github.com/prometheus/node_exporter",
+  "tag": "v1.13.1",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "node_exporter"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "9100"
+   ],
+   "path": "/metrics",
+   "wait": 5
+  }
+ },
+ {
+  "key": "maddy-mail",
+  "route": "go_only",
+  "repo": "https://github.com/foxcpp/maddy",
+  "tag": "0.9.8",
+  "bins": [
+   {
+    "pkg": "./cmd/maddy",
+    "out": "maddy"
+   }
+  ],
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 3
+  },
+  "git_tag": "v0.9.7"
+ },
+ {
+  "key": "adguardhome",
+  "route": "go_fe",
+  "repo": "https://github.com/AdguardTeam/AdGuardHome",
+  "tag": "v1.0.0",
+  "fe_dir": "client",
+  "fe_cmds": [
+   "npm ci --no-audit --no-fund || npm install --no-audit --no-fund",
+   "npm run build-prod"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "AdGuardHome"
+   }
+  ],
+  "ports": "3000",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 12
+  }
+ },
+ {
+  "key": "gitea",
+  "route": "go_fe",
+  "repo": "https://github.com/go-gitea/gitea",
+  "tag": "28.4.1",
+  "fe_dir": ".",
+  "fe_cmds": [
+   "corepack pnpm@11.9.0 install --frozen-lockfile",
+   "corepack pnpm@11.9.0 exec vite build"
+  ],
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "gitea"
+   }
+  ],
+  "ports": "3000",
+  "dockerfile": "# loong64 self-built (wave3) - gitea CE substitute for commitgo/gitea-ee\nFROM lcr.loongnix.cn/library/alpine:3.24\nRUN apk add --no-cache ca-certificates tzdata git su-exec 2>/dev/null || (sed -i 's|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apk/repositories && apk add --no-cache ca-certificates tzdata git su-exec)\nWORKDIR /app\nCOPY gitea /app/gitea\nCOPY public/assets /app/public/assets\nCOPY entrypoint.sh /app/entrypoint.sh\nRUN chmod +x /app/gitea /app/entrypoint.sh && addgroup -g 1000 git && adduser -D -u 1000 -G git git && mkdir -p /app/data /app/custom /data && chown -R git:git /app /data\nENV TZ=Asia/Shanghai GITEA_WORK_DIR=/app USER_UID=1000 USER_GID=1000\nEXPOSE 3000\nENTRYPOINT [\"/app/entrypoint.sh\"]\n",
+  "copy": [
+   {
+    "src": "public/assets",
+    "dst": "public/assets"
+   }
+  ],
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 20
+  },
+  "files": {
+   "entrypoint.sh": "#!/bin/sh\nif [ \"$(id -u)\" = \"0\" ]; then\n  for d in /app/data /app/custom /data; do [ -d \"$d\" ] && chown -R \"${USER_UID:-1000}:${USER_GID:-1000}\" \"$d\"; done\n  exec su-exec \"${USER_UID:-1000}:${USER_GID:-1000}\" /app/gitea\nfi\nexec /app/gitea\n"
+  },
+  "git_tag": "v1.27.3"
+ },
+ {
+  "key": "forgejo-runner",
+  "route": "go_only",
+  "repo": "https://code.forgejo.org/forgejo/runner",
+  "tag": "v13.2.2",
+  "bins": [
+   {
+    "pkg": ".",
+    "out": "forgejo-runner",
+    "tags": "netgo osusergo"
+   }
+  ],
+  "ports": "",
+  "df_cmd": "[\"daemon\"]",
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 6
+  }
+ },
+ {
+  "key": "komari",
+  "route": "artifact",
+  "tag": "1.6.2",
+  "fetch": [
+   {
+    "url": "https://github.com/komari-monitor/komari/releases/download/1.6.2/komari-linux-loong64",
+    "name": "komari"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/alpine:3.24\nRUN sed -i \"s|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g\" /etc/apk/repositories 2>/dev/null; true\nRUN apk add --no-cache ca-certificates tzdata\nCOPY komari /usr/local/bin/komari\nRUN chmod +x /usr/local/bin/komari\nEXPOSE 25774\nCMD [\"/usr/local/bin/komari\", \"server\", \"-c\", \"/config/config.yml\"]\n",
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 8
+  },
+  "copy": [
+   {
+    "src": "komari"
+   }
+  ]
+ },
+ {
+  "key": "verdaccio",
+  "route": "artifact",
+  "tag": "7.1.2",
+  "fetch": [],
+  "files": {
+   "config.yaml": "storage: /verdaccio/storage/data\nauth:\n  htpasswd:\n    file: /verdaccio/storage/htpasswd\n    max_users: -1\nuplinks:\n  npmjs:\n    url: https://registry.npmmirror.com\npackages:\n  '@*/*':\n    access: $all\n    publish: $authenticated\n    unpublish: $authenticated\n  '**':\n    access: $all\n    publish: $authenticated\n    unpublish: $authenticated\nmiddlewares:\n  audit:\n    enabled: true\nlog: { type: stdout, format: pretty, level: http }\nweb: { title: Verdaccio }\npublish: true\n"
+  },
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive npm_config_registry=https://registry.npmmirror.com TZ=Asia/Shanghai\nRUN apt-get update && apt-get install -y --no-install-recommends nodejs npm ca-certificates && rm -rf /var/lib/apt/lists/*\nRUN npm install -g verdaccio@7.1.0\nRUN mkdir -p /verdaccio/storage && chmod -R 777 /verdaccio\nCOPY config.yaml /verdaccio/config.yaml\nVOLUME /verdaccio/storage\nEXPOSE 4873\nENTRYPOINT [\"verdaccio\",\"--config\",\"/verdaccio/config.yaml\",\"--listen\",\"0.0.0.0:4873\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 15
+  }
+ },
+ {
+  "key": "wallos",
+  "route": "static",
+  "repo": "https://github.com/ellite/Wallos",
+  "tag": "5.11.2",
+  "git_tag": "v5.11.1",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-sqlite3 php8.4-curl php8.4-zip && rm -rf /var/lib/apt/lists/*\nRUN apt-get install -y --no-install-recommends cron >/dev/null 2>&1 || true\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "kodbox",
+  "route": "static",
+  "repo": "https://github.com/kalcaddle/kodbox",
+  "tag": "1.71.04",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-gd php8.4-mysql php8.4-curl php8.4-zip && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  },
+  "git_tag": "1.71.03"
+ },
+ {
+  "key": "showdoc",
+  "route": "static",
+  "repo": "https://github.com/star7th/showdoc",
+  "tag": "v3.9.7",
+  "dist_dir": ".",
+  "build_cmds": [],
+  "dockerfile": "FROM lcr.loongnix.cn/library/debian:sid-20250615\nRUN printf 'Types: deb\\nURIs: http://mirrors.tuna.tsinghua.edu.cn/debian\\nSuites: sid\\nComponents: main\\nSigned-By: /usr/share/keyrings/debian-archive-keyring.gpg\\n' > /etc/apt/sources.list.d/debian.sources && rm -f /etc/apt/sources.list\nENV DEBIAN_FRONTEND=noninteractive\nRUN apt-get update && apt-get install -y --no-install-recommends apache2 libapache2-mod-php ca-certificates php8.4-sqlite3 php8.4-gd && rm -rf /var/lib/apt/lists/*\nCOPY site /var/www/html/\nRUN chown -R www-data:www-data /var/www/html\nENV TZ=Asia/Shanghai\nEXPOSE 80\nCMD [\"sh\",\"-c\",\". /etc/apache2/envvars && exec apache2 -D FOREGROUND\"]\n",
+  "smoke": {
+   "type": "http",
+   "path": "/",
+   "wait": 6
+  }
+ },
+ {
+  "key": "metabase",
+  "route": "artifact",
+  "tag": "v0.65.6",
+  "fetch": [
+   {
+    "url": "https://downloads.metabase.com/v0.65.6/metabase.jar",
+    "name": "metabase.jar"
+   }
+  ],
+  "copy": [
+   {
+    "src": "metabase.jar",
+    "dst": "metabase.jar"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/eclipse-temurin:21-jdk\nWORKDIR /app\nCOPY metabase.jar /app/metabase.jar\nENV MB_SITE_URL=\"\" TZ=Asia/Shanghai\nEXPOSE 3000\nENTRYPOINT [\"java\",\"-jar\",\"/app/metabase.jar\"]\n",
+  "smoke": {
+   "type": "http",
+   "ports": [
+    "3000"
+   ],
+   "path": "/",
+   "wait": 50
+  }
+ },
+ {
+  "key": "dbhub",
+  "route": "go_only",
+  "repo": "https://github.com/bytebase/dbhub",
+  "tag": "2.0.0",
+  "bins": [
+   {
+    "pkg": "./",
+    "out": "dbhub"
+   }
+  ],
+  "dockerfile": "FROM lcr.loongnix.cn/library/alpine:3.24\nRUN sed -i \"s|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g\" /etc/apk/repositories; true\nRUN apk add --no-cache ca-certificates tzdata\nCOPY dbhub /usr/local/bin/dbhub\nRUN chmod +x /usr/local/bin/dbhub\nEXPOSE 8080\nENTRYPOINT [\"/usr/local/bin/dbhub\"]\n",
+  "smoke": {
+   "type": "cmd",
+   "cmd": [
+    "--version"
+   ],
+   "wait": 6
+  }
+ }
+]

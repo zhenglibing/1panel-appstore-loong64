@@ -14,7 +14,8 @@ import json, os, re, subprocess, sys, time, tarfile, shutil, hashlib
 
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
+# w76: public repo sits one level deeper than the original build tree
+ROOT = os.path.abspath(os.path.join(HERE, "..", "..", "..", ".."))
 SSH = os.path.join(ROOT, "ssh_exec.py")
 GO = os.path.join(ROOT, "1panel_port", "toolchain", "go", "bin", "go.exe")
 DL = os.path.join(HERE, "dl")

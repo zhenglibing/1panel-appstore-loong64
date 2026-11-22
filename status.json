@@ -1,0 +1,74 @@
+{
+ "node-exporter": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/node-exporter:v1.13.1 smoke=http ok (wget)",
+  "route": "go_only",
+  "secs": 90
+ },
+ "maddy-mail": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/maddy-mail:0.9.8 smoke=cmd ok: ds or help for one command",
+  "route": "go_only",
+  "secs": 86
+ },
+ "adguardhome": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/adguardhome:v1.0.0 smoke=http ok (wget)",
+  "route": "go_fe",
+  "secs": 190
+ },
+ "verdaccio": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/verdaccio:7.1.2 smoke=http ok (wget)",
+  "route": "artifact",
+  "secs": 160
+ },
+ "wallos": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/wallos:5.11.2 smoke=http ok (wget)",
+  "route": "static",
+  "secs": 105
+ },
+ "kodbox": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/kodbox:1.71.04 smoke=http ok (wget)",
+  "route": "static",
+  "secs": 174
+ },
+ "showdoc": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/showdoc:v3.9.7 smoke=http ok (wget)",
+  "route": "static",
+  "secs": 188
+ },
+ "gitea": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/gitea:28.4.1 smoke=http ok (wget)",
+  "route": "go_fe",
+  "secs": 198
+ },
+ "forgejo-runner": {
+  "state": "failed",
+  "msg": "127.0.0.1:5000/loong/forgejo-runner:v13.2.2 smoke=cmd: time=\"2026-11-23T04:48:43+08:00\" level=info msg=\"No configuration file specified; using default settings.\"\ntime=\"2026-11-23T04:48:43+08:00\" level=info msg=\"Starting runner daemon\"\nError: runner: 0 server connections configured, terminating\nEXIT=1\n",
+  "route": "go_only",
+  "secs": 40
+ },
+ "komari": {
+  "state": "failed",
+  "msg": "build error: -----------\n   2 |     RUN sed -i \"s|dl-cdn.alpinelinux.org|mirrors.tuna.tsinghua.edu.cn|g\" /etc/apk/repositories 2>/dev/null; true\n   3 |     RUN apk add --no-cache ca-certificates tzdata\n   4 | >>> COPY komari /usr/local/bin/komari\n   5 |     RUN chmod +x /usr/local/bin/komari\n   6 |     EXPOSE 25774\n--------------------\nERROR: failed to solve: failed to compute cache key: failed to calculate checksum of ref c537821e-98aa-4541-9333-938660632037::xof4zpl7eurk14nemw21yxsqz: \"/komari",
+  "route": "artifact",
+  "secs": 32
+ },
+ "metabase": {
+  "state": "built",
+  "msg": "127.0.0.1:5000/loong/metabase:v0.65.6 smoke=http ok (wget)",
+  "route": "artifact",
+  "secs": 235
+ },
+ "dbhub": {
+  "state": "failed",
+  "msg": "go build ./ failed\ngo: cannot find main module, but found .git/config in E:\\05AIProjects\\30zcode\\08crosscompile\\02loongson2k3000\\1panel_port\\community_publish\\repo-staging\\1panel-appstore-loong64\\dl\\dbhub\n\tto create a module there, run:\n\tgo mod init\n",
+  "route": "go_only",
+  "secs": 7
+ }
+}
