@@ -4,7 +4,7 @@
 
 - 配套上游 PR：[1Panel-dev/appstore](https://github.com/1Panel-dev/appstore) loong64 build 配方（openresty + 7 应用）
 - 实测环境：零刻 ME Pro（龙芯 2K3000，8×LA364E），Loongnix 25，Docker 26.1.5
-- 实测成果：268 个商店应用四层盘点，**180 个自建仓库 / 319 个 tag**（已全量镜像至公共 ACR 源并逐 tag 校验 digest），体检 **155/155 离线可装**（manifest 级零 miss），OpenResty 建站闭环（静态站/反代/WAF）
+- 实测成果：268 个商店应用四层盘点，**182 个自建仓库 / 322 个 tag**（已全量镜像至公共 ACR 源并逐 tag 校验 digest），体检 **158/158 离线可装、NONLOCAL 清零**（全部应用 manifest 级零 miss），OpenResty 建站闭环（静态站/反代/WAF）
 
 ## 背景与思路
 
@@ -78,7 +78,7 @@ python -I pipeline.py --spec specs/spec_w27.json --key prometheus
 
 ## 体检与维护
 
-- `audit14`（manifest 级探测）+ `audit20`（离线可装性）双体检：153/153 零 miss（2026-11-22，wave69 增补 odoo 19.0 ERP / zabbix-server 7.4.5 监控栈 / dbx 0.6.68；wave70 增补 netdata v2.12.3 全源码监控 agent 与 docker-mailserver 16.0.1 全栈邮件服务器；wave71 增补 GreatSQL 8.0.32-27 国产 MySQL 分支全源码设备编译；wave72 增补 zabbix-xinchuang-edition 信创版 7.0.27 四镜像全栈（server/proxy/agent C 源码编 + web 纯 PHP ui，官方 zabbix-docker entrypoints 照抄支持 init_db_only 模式）；wave73 增补 TDengine 3.4.3.9 时序数据库全源码（taosd + taos CLI + taosadapter CGO，官方 entrypoint 照抄；keeper/explorer 为内部组件按设计降级）与 Arcadia 1.2.0 脚本运维平台（Node 全栈重写，Prisma 7 driver-adapter 纯 TS 客户端，PC 预生成 + seed sqlite 首启注入）；wave74 增补 LobeChat 1.143.3（Next 15 standalone，Windows 构建三坑：junction shim 破 symlink 特权墙 + changelog 路由动态化 + 懒加载长尾补链）与 UPage 2.0.0（Prisma 6.16 换 engineType=client 纯 TS 客户端补丁 + better-sqlite3 设备源编 + PC migrate 种子库），并对存量 10 应用终审：5 个拦截（palworld/photoprism/music-tag-web/laya-server/vane，含上游闭源化与 torch/playwright/onnxruntime 无 loong64），NONLOCAL 仅余 affine/teable 双候选）
+- `audit14`（manifest 级探测）+ `audit20`（离线可装性）双体检：153/153 零 miss（2026-11-22，wave69 增补 odoo 19.0 ERP / zabbix-server 7.4.5 监控栈 / dbx 0.6.68；wave70 增补 netdata v2.12.3 全源码监控 agent 与 docker-mailserver 16.0.1 全栈邮件服务器；wave71 增补 GreatSQL 8.0.32-27 国产 MySQL 分支全源码设备编译；wave72 增补 zabbix-xinchuang-edition 信创版 7.0.27 四镜像全栈（server/proxy/agent C 源码编 + web 纯 PHP ui，官方 zabbix-docker entrypoints 照抄支持 init_db_only 模式）；wave73 增补 TDengine 3.4.3.9 时序数据库全源码（taosd + taos CLI + taosadapter CGO，官方 entrypoint 照抄；keeper/explorer 为内部组件按设计降级）与 Arcadia 1.2.0 脚本运维平台（Node 全栈重写，Prisma 7 driver-adapter 纯 TS 客户端，PC 预生成 + seed sqlite 首启注入）；wave74 增补 LobeChat 1.143.3（Next 15 standalone，Windows 构建三坑：junction shim 破 symlink 特权墙 + changelog 路由动态化 + 懒加载长尾补链）与 UPage 2.0.0（Prisma 6.16 换 engineType=client 纯 TS 客户端补丁 + better-sqlite3 设备源编 + PC migrate 种子库），并对存量 10 应用终审：5 个拦截（palworld/photoprism/music-tag-web/laya-server/vane，含上游闭源化与 torch/playwright/onnxruntime 无 loong64）；wave75 增补 AFFiNE 0.27.4（amd64 层抽取 + Prisma 6.16 纯 TS 客户端 + 自家 Rust napi（y-octo/sqlx 全家桶）设备 rustc 1.97.1 源编 + @node-rs argon2/crc32 loong64 cdylib + SQL 迁移器复刻 prisma migrate deploy 语义 + pgvector 伴生）与 Teable latest（**Prisma 史上最深移植**：bundle 内联的 queryCompiler 客户端与 6.2.1 实例式 adapter 协议错位，以 /app/loong 运行时岛屿 + connect 点桥接（用 6.16 PrismaPg 在其 pool 上重建原生工厂）闭环；sharp/css-inline/bcrypt 三 native 源编；@napi-rs/canvas 缺失以 DOM stub 预载兜底 pdf-parse）—— **NONLOCAL 清零，158/158 全量离线可装**）
 - 公共 ACR 源校验：逐 tag 比对本地 registry 与 ACR 的 manifest digest，302 tag 全量 bit-exact
 - 上游漂移检测：CDN 索引 vs 本地快照严格 diff（键用 `apps[].id`），全绿则零动作
 - 备份惯例：registry 卷直接 tar 落盘，不要依赖"可重建"
