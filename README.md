@@ -83,6 +83,16 @@ python -I pipeline.py --spec specs/spec_w27.json --key prometheus
 - 上游漂移检测：CDN 索引 vs 本地快照严格 diff（键用 `apps[].id`），全绿则零动作
 - 备份惯例：registry 卷直接 tar 落盘，不要依赖"可重建"
 
+## 文档
+
+| 文档 | 内容 |
+|---|---|
+| [安装部署手册](docs/1panel-loong64-install-guide.md) | **从裸 Loongnix 到 1Panel + 商店可装 loong64 应用**：Docker、面板交叉编译/安装包/安装、镜像供给（映射层 + ACR 二级回源 + 本地 registry）、商店三路线、验证清单、升级/备份、FAQ 13 条 |
+| [移植完整手册](docs/1panel-port-manual-v2.4.2-loong64.md) | 移植过程全记录：映射层工程、OpenResty 自建、商店镜像站、自维护体系 |
+| [移植总报告](docs/loong64-port-report-20261123.md) | wave29-79（2026-11-11~23）：148/268 应用移植、工法九式、逐波记录、体检 170/170 |
+| [268 应用移植矩阵](docs/loong64-port-matrix.md) | 全量应用分类清单（工法/版本/波次） |
+| [覆盖缺口分析](docs/gap-analysis-20261111.md) | 缺口分级方法论（REG/LCR/BLOCKED/GAP/VAR/WAIT/NOIMG） |
+
 ## 许可与致谢
 
 - 本仓库遵循 GPL-3.0（与上游 1Panel-dev/appstore 一致）
