@@ -1,0 +1,4 @@
+# pipeline working dirs (app source trees / build contexts / logs - never commit)
+/ctx/
+/dl/
+/logs/
