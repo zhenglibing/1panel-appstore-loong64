@@ -47,6 +47,10 @@ docker pull crpi-a02ej0ppuvq7b0mw.cn-hangzhou.personal.cr.aliyuncs.com/1panel-lo
 
 ## 快速开始（龙芯设备）
 
+> **面板安装包现成可下**：[Releases · panel-v2.4.2-loong64](https://github.com/zhenglibing/1panel-appstore-loong64/releases/tag/panel-v2.4.2-loong64)
+> （1Panel v2.4.2 loong64 完整包，含映射层 + ACR 二级回源；自行交叉编译见 [安装部署手册](docs/1panel-loong64-install-guide.md) §3）。
+
+
 ```bash
 # 0. 直接使用公共镜像源（推荐起点，见上节）
 docker pull crpi-a02ej0ppuvq7b0mw.cn-hangzhou.personal.cr.aliyuncs.com/1panel-loong64/<key>:<ver>

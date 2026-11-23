@@ -14,8 +14,8 @@
 ## 0. 五分钟速览（已经装好 Docker 的设备）
 
 ```bash
-# ① 面板：用 fork 源码交叉编译出 loong64 二进制（PC 上 ~10 分钟，见 §4），
-#    组装安装包后在设备上免交互安装（见 §5）
+# ① 面板：直接下载现成安装包（Releases · panel-v2.4.2-loong64，含 sha256，见 §3 路线 B），
+#    或用 fork 源码交叉编译（PC 上 ~10 分钟，见 §3 路线 A）后在设备上免交互安装（见 §4）
 # ② 镜像供给：零配置 —— fork 的 agent 内建「映射层 + ACR 二级回源」，
 #    安装应用时自动改写 compose 并从公共 ACR 匿名拉取 loong64 镜像
 # ③ 商店：面板默认连官方商店源即可用（见 §7 路线一）
@@ -128,6 +128,10 @@ readelf -h ../build/1panel-core | grep Machine
 ```
 
 ### 路线 B：组装安装包（官方 amd64 包做模板，只换二进制）
+
+> **现成安装包（推荐，跳过本节）**：[Releases · panel-v2.4.2-loong64](https://github.com/zhenglibing/1panel-appstore-loong64/releases/tag/panel-v2.4.2-loong64)
+> —— 从 fork `loong64-support` @ `c8becdc` 交叉编译的完整包（含全部映射规则 + ACR 二级回源），
+> sha256 随附；安装步骤直接看 §4。
 
 ```bash
 # 官方包结构：1panel-core / 1panel-agent / 1pctl / GeoIP.mmdb / install.sh / lang/ / initscript/ / *.service
